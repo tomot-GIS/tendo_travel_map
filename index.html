@@ -7,7 +7,7 @@
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <link rel="stylesheet" href="css/leaflet.css"><link rel="stylesheet" href="css/L.Control.Locate.min.css">
-        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">      
         <style>
 
         </style>
@@ -32,6 +32,8 @@
         <script src="data/json_4.js"></script>
         <script src="data/WiFi_5.js"></script>
         <script src="data/json_6.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/trafforddatalab/leaflet.reachability@v2.0.1/leaflet.reachability.css"/>
+        <script src="https://cdn.jsdelivr.net/gh/trafforddatalab/leaflet.reachability@v2.0.1/leaflet.reachability.js"></script>          
         <script>
         let mapElement = document.getElementById("map");
         mapElement.style.width = "100%";
@@ -48,9 +50,59 @@
             zoomControl:true, maxZoom:28, minZoom:1
         }).fitBounds([[38.31202080517374,140.2830019555711],[38.39882102926068,140.46119196056299]]);
         var hash = new L.Hash(map);
-        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a> &middot; <a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
         L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+            // Example function to style the isoline polygons when they are returned from the API call
+            function styleIsolines(feature) {
+                // NOTE: You can do some conditional styling by reading the properties of the feature parameter passed to the function
+                return {
+                    color: '#0073d4',
+                    opacity: 0.5,
+                    fillOpacity: 0.2
+                };
+            }
+
+            // Example function to style the isoline polygons when the user hovers over them
+            function highlightIsolines(e) {
+                // NOTE: as shown in the examples on the Leaflet website, e.target = the layer the user is interacting with
+                var layer = e.target;
+
+                layer.setStyle({
+                    fillColor: '#ffea00',
+                    dashArray: '1,13',
+                    weight: 4,
+                    fillOpacity: '0.5',
+                    opacity: '1'
+                });
+            }
+
+            // Example function to reset the style of the isoline polygons when the user stops hovering over them
+            function resetIsolines(e) {
+                // NOTE: as shown in the examples on the Leaflet website, e.target = the layer the user is interacting with
+                var layer = e.target;
+
+                reachabilityControl.isolinesGroup.resetStyle(layer);
+            }
+
+            // Example function to display information about an isoline in a popup when the user clicks on it
+            function clickIsolines(e) {
+                // NOTE: as shown in the examples on the Leaflet website, e.target = the layer the user is interacting with
+                var layer = e.target;
+                var props = layer.feature.properties;
+                var popupContent = 'Mode of travel: ' + props['Travel mode'] + '<br />Range: 0 - ' + props['Range'] + ' ' + props['Range units'] + '<br />Area: ' + props['Area'] + ' ' + props['Area units'] + '<br />Population: ' + props['Population'];
+                if (props.hasOwnProperty('Reach factor')) popupContent += '<br />Reach factor: ' + props['Reach factor'];
+                layer.bindPopup(popupContent).openPopup();
+            }
+
+            // Example function to create a custom marker at the origin of the isoline groups
+            function isolinesOrigin(latLng, travelMode, rangeType) {
+                return L.circleMarker(latLng, { radius: 4, weight: 2, color: '#0073d4', fillColor: '#fff', fillOpacity: 1 });
+            }        
+        L.control.reachability({
+            // add settings/options here
+            apiKey: '5b3ce3597851110001cf6248c6d8b05365754a8e90c98a327d2e2705',           
+        }).addTo(map);
         var bounds_group = new L.featureGroup([]);
         function setBounds() {
         }
